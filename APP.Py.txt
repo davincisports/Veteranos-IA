@@ -1,0 +1,48 @@
+import streamlit as st
+import google.generativeai as genai
+
+# --- CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(page_title="IA do Clube", page_icon="⚽")
+
+# --- CONFIGURAÇÃO DA API (O CÉREBRO) ---
+# Vais buscar a tua chave nas "Secrets" do Streamlit Cloud
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+
+# --- DEFINIÇÃO DO AGENTE (PERSONALIDADE) ---
+SYSTEM_INSTRUCTION = """
+Tu és a 'Dra. Sofia', a secretária virtual do Clube GDCFF Veteranos.
+És simpática, organizada e profissional.
+O teu trabalho é ajudar sócios e jogadores com informações sobre:
+- Jogos (Sábado às 18h00 vs Leões FC)
+- Quotas (Valor de 20€/mês)
+- Eventos (Jantar de Confraternização em todos e jogos e Jantar de natal em Dezembro)
+Se não souberes algo, diz que vais consultar a direção.
+Usa emojis para ser mais amigável.
+"""
+
+# Inicializar o modelo
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=SYSTEM_INSTRUCTION
+)
+
+# --- INTERFACE DO UTILIZADOR ---
+st.title("⚽ GDCFF Assistente Virtual")
+st.write("Olá! Sou a IA do teu clube. Pergunta-me sobre jogos, quotas ou eventos.")
+
+# Iniciar a sessão de chat
+if "chat" not in st.session_state:
+    st.session_state.chat = model.start_chat(history=[])
+
+# Caixa de input para o utilizador escrever
+user_input = st.chat_input("Escreve aqui a tua dúvida...")
+
+if user_input:
+    # Mostrar a pergunta do utilizador
+    st.chat_message("user").markdown(user_input)
+    
+    # Obter resposta da IA (Google Gemini)
+    response = st.session_state.chat.send_message(user_input)
+    
+    # Mostrar a resposta da IA
+    st.chat_message("assistant").markdown(response.text)
